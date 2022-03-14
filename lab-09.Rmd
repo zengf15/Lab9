@@ -5,24 +5,128 @@ date: "03/13/22"
 output: github_document
 ---
 
+In this lab, we are going to look at the predictors of a positive professor evaluation score. The data was collected based on end-of-semester professor ratings from U-T Austin. The professors were also rated in their physical attractiveness by six students. The original study found that higher physical attractiveness predicts more positive ratings (Hamermesh and Parker, 2005).
+
 ### Load packages and data
 
 ```{r load-packages, message=FALSE}
 library(tidyverse) 
 library(tidymodels)
 library(openintro)
+library(broom)
 ```
 
 ```{r data}
 evals
 ```
 
+### Part 1: Exploratory Data Analysis
 
-### Exercise 2
+The distribution of evaluation score is negative (left) skewed, which means most professors get a satisfactory score. The distribution of beauty rating is positive (right) skewed, which means only a small number of professors are considered very attractive.
 
-...
+```{r dist}
+evals %>%
+  ggplot(aes(x=score))+
+  geom_histogram(binwidth=0.5)
+evals %>%
+  ggplot(aes(x=bty_avg))+
+  geom_histogram(binwidth=0.5)
+```
 
-Add exercise headings as needed.
+Let's visualize the relationship between professors' average evaluation scores and their average beauty ratings.
 
-## 
-For Exercise 12, relevel() function can be helpful! 
+```{r point}
+evals %>%
+  ggplot(aes(y=score, x=bty_avg)) +
+  geom_point()
+```
+
+We can also use jitter geom. It adds a small amount of random deviation to each point to avoid over-plotting.
+
+```{r jitter}
+evals %>%
+  ggplot(aes(y=score, x=bty_avg)) +
+  geom_jitter()
+```
+
+There does seem to be a moderate relationship between beauty ratings and evaluation scores. 
+
+###  Part 2: Linear regression with a numerical predictor
+
+The linear regression model of using average beauty ratings to predict average evaluation scores could be written as the following formula: 
+
+evaluation score = 3.88034 + 0.06664 * beauty rating
+
+```{r linear}
+m_bty <- lm(score ~ bty_avg, data=evals)
+summary(m_bty)
+```
+
+The relationship between average beauty rating and evaluation scores is positive and significant, but not strong. 
+
+The intercept of the line tells us that if a professor's perceived attractiveness is 0, then they will have a evaluation score of 3.9/5, which is pretty high. The influence of attractiveness on evaluation is weak.
+
+The R squared of the model is 0.03293, which means only 3.3% of variance in one's evaluation score is explained by one's average beauty rating.
+
+```{r line}
+evals %>%
+  ggplot(aes(y=score, x=bty_avg)) +
+  geom_jitter() +
+  geom_abline(intercept = 3.88034, slope = 0.06664, color="orange")
+```
+
+### Part 3: Linear regression with a categorical predictor
+
+The regression line of gender and evaluation is:
+evaluation score = 4.09282 + 0.14151 * gender
+
+The intercept indicates that female professors have an average evaluation score of 4.09282, and male professors have a slightly higher average evaluation score of 4.09282 + 0.14151 = 4.23433.
+
+```{r gender}
+m_gen <- lm(score~gender, evals)
+summary(m_gen)
+```
+
+The regression line of rank and evaluation is:
+evaluation score = 4.28431 - 0.12968 * tenure track - 0.14518 * tenured 
+
+The intercept indicates that teaching professors have an average evaluation score of 4.28431, tenure track professors have a slightly lower average evaluation score of 4.28431 - 0.12968 = 4.15463, and tenured professors have a slighlt lower avarage evaluation score of 4.28431 - 0.14518 = 4.13913.
+
+```{r rank}
+m_rank <- lm(score~rank, evals)
+summary(m_rank)
+```
+
+Let's relevel rank and make tenure track the baseline level.
+
+The regression line of the releveled rank and evaluation is:
+evaluation score = 4.15463 - 0.12968 * teaching - 0.14518 * tenured 
+
+The intercept indicates that tenure track professors have an average evaluation score of 4.15463, teaching professors have a slightly higher average evaluation score of 4.15463 + 0.12968 = 4.28431, and tenured professors have a slightly lower average evaluation score of 4.15463 - 0.01550 = 4.13913.
+
+The adjusted R squared is 0.007332, such that only 0.7% of variance is explained by the releveld rank.
+
+```{r rank2}
+rank_relevel <- relevel(evals$rank, "tenure track")
+m_rank_2 <- lm(score~rank_relevel, evals)
+summary(m_rank_2)
+```
+
+Now let's create a new variable called tenure_eligible that labels "teaching" faculty as "no" and labels "tenure track" and "tenured" faculty as "yes".
+
+The regression line of tenure eligibility and evaluation is:
+evaluation score = 4.2843 - 0.1406 * tenure eligibility
+
+The intercept indicates that teaching professors have an average evaluation score of 4.2843, and tenure eligible professors have a slightly lower average evaluation score of 4.2843 - 0.1406 = 4.1437.
+
+The adjusted R squared is 0.009352, such that only 0.9% of variance is explained by tenure eligibility.
+
+```{r mutate}
+evals <- evals %>%
+  mutate(tenure_eligible = case_when (
+    rank == "teaching" ~ 0, 
+    rank == "tenure track" ~ 1, 
+    rank == "tenured" ~ 1))
+m_rank_3 <- lm(score~tenure_eligible, evals)
+summary(m_rank_3)
+```
