@@ -1,7 +1,7 @@
 ---
 title: "Lab 09 - Grading the professor, Pt. 1"
-author: "Insert your name here"
-date: "Insert date here"
+author: "Fanyi Zeng"
+date: "03/13/22"
 output: github_document
 ---
 
@@ -13,12 +13,10 @@ library(tidymodels)
 library(openintro)
 ```
 
-### Exercise 1
+```{r data}
+evals
+```
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
 
 ### Exercise 2
 
