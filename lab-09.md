@@ -191,7 +191,7 @@ The regression line of rank and evaluation is: evaluation score =
 The intercept indicates that teaching professors have an average
 evaluation score of 4.28431, tenure track professors have a slightly
 lower average evaluation score of 4.28431 - 0.12968 = 4.15463, and
-tenured professors have a slighlt lower avarage evaluation score of
+tenured professors have a slightly lower average evaluation score of
 4.28431 - 0.14518 = 4.13913.
 
 ``` r
